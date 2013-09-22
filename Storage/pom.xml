@@ -1,0 +1,23 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.gmail.sleepy771</groupId>
+  <artifactId>Storage-Interface</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>StorageInterface</name>
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <description>Storage Interface is interface located between Storage module and application using it. 
+Absolutely splits Storage module from application source which simplifies writing codes and completely drops out necessity of editing code when changing type of storage.</description>
+  <url>https://github.com/sleepy771/AbstractStorage</url>
+</project>
