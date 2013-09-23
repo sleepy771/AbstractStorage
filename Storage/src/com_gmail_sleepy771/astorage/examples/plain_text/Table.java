@@ -2,8 +2,8 @@ package com_gmail_sleepy771.astorage.examples.plain_text;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com_gmail_sleepy771.astorage.SerializationException;
 import com_gmail_sleepy771.astorage.Storable;
+import com_gmail_sleepy771.astorage.exceptions.SerializationException;
 
 public class Table implements Storable {
 	

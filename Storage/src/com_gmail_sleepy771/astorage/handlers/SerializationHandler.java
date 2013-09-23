@@ -1,4 +1,4 @@
-package com_gmail_sleepy771.astorage;
+package com_gmail_sleepy771.astorage.handlers;
 
 import java.util.Collection;
 import java.util.Map;
@@ -7,22 +7,27 @@ import java.util.WeakHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
+import com_gmail_sleepy771.astorage.Storable;
+import com_gmail_sleepy771.astorage.exceptions.SerializationException;
+import com_gmail_sleepy771.astorage.utilities.ObjectData;
+import com_gmail_sleepy771.astorage.utilities.UDID;
+
 public class SerializationHandler extends Handler {
 
 	private static final Logger LOGGER = Logger
 			.getLogger(SerializationHandler.class.getName());
 
 	private LinkedBlockingQueue<Storable> storableObjectsQueue = null;
-	private WeakHashMap<Storable, Long> serialsMap = new WeakHashMap<Storable, Long>();
+	private WeakHashMap<Storable, UDID> serialsMap = new WeakHashMap<Storable, UDID>();
 	private LinkedBlockingQueue<ObjectData> toStorageQueue = null;
 	private Vector<Object> unserializedObjects = null;
 
 	private static class PoisonObject implements Storable {
+		private static final long serialVersionUID = 5868390962887763523L;
 		@Override
 		public Map<String, Object> serialize() throws SerializationException {
 			return null;
 		}
-
 	}
 
 	public SerializationHandler() {
@@ -57,7 +62,7 @@ public class SerializationHandler extends Handler {
 
 	public void run() {
 		Storable obj = null;
-		Map<Storable, Long> storables = null;
+		Map<Storable, UDID> storables = null;
 		ObjectData od = null;
 		boolean helthy = true;
 		try {

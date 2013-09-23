@@ -1,21 +1,21 @@
-package com_gmail_sleepy771.astorage;
+package com_gmail_sleepy771.astorage.handlers;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
-public class StorageReader extends Handler {
+import com_gmail_sleepy771.astorage.AbstractStorage;
+import com_gmail_sleepy771.astorage.utilities.ObjectData;
+import com_gmail_sleepy771.astorage.utilities.Query;
+import com_gmail_sleepy771.astorage.utilities.UDID;
+
+public class StorageReader extends Handler{
 	
 	/*
 	 * Multi-threaded writing to storage not used yet.
@@ -31,8 +31,7 @@ public class StorageReader extends Handler {
 	private AbstractStorage storage = null;
 	
 	private LinkedList<ObjectData> outputData = null;
-	private TreeSet<Long> requiredSerials = null, loadedSerials = null;
-	private int initDataCapacity = 0;
+	private TreeSet<UDID> requiredSerials = null, loadedSerials = null;
 	
 	public synchronized Vector<ObjectData> getData(Query q) throws InterruptedException{
 		readerLock.lock();
@@ -61,12 +60,11 @@ public class StorageReader extends Handler {
 						outputData = new LinkedList<ObjectData>(dataSet); // uvidime ci synchronizovat treba
 						// for notifying last querying data objects
 						outputData.addFirst(outputData.getLast());
-						initDataCapacity = dataSet.size();
 					}
 					else{
 						outputData.addAll(dataSet);
 					}
-					TreeSet<Long> serials = new TreeSet<Long>();
+					TreeSet<UDID> serials = new TreeSet<UDID>();
 					for(ObjectData data : dataSet){
 						serials.addAll(data.getReferenceSerials().values());
 						loadedSerials.add(data.getSerialNumber());

@@ -1,4 +1,4 @@
-package com_gmail_sleepy771.astorage;
+package com_gmail_sleepy771.astorage.handlers;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -6,6 +6,12 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
+
+import com_gmail_sleepy771.astorage.AbstractStorage;
+import com_gmail_sleepy771.astorage.exceptions.IncompleteDataException;
+import com_gmail_sleepy771.astorage.utilities.ObjectData;
+import com_gmail_sleepy771.astorage.utilities.Query;
+import com_gmail_sleepy771.astorage.utilities.UDID;
 
 public class StorageReaderSingle {
 	private static final Logger LOGGER = Logger.getLogger(StorageReader.class.getName());
@@ -17,7 +23,7 @@ public class StorageReaderSingle {
 		try{
 			Set<ObjectData> returnedDataSet = storage.load(q);
 			outputData.addAll(returnedDataSet);
-			TreeSet<Long> requiredData = new TreeSet<Long>();
+			TreeSet<UDID> requiredData = new TreeSet<UDID>();
 			for(ObjectData data : returnedDataSet){
 				requiredData.addAll(data.getReferenceSerials().values());
 			}
@@ -41,7 +47,7 @@ public class StorageReaderSingle {
 	}
 	
 	public static boolean isClosed(Collection<ObjectData> dataCollection){
-		TreeSet<Long> contained = new TreeSet<Long>();
+		TreeSet<UDID> contained = new TreeSet<UDID>();
 		for(ObjectData data : dataCollection){
 			contained.add(data.getSerialNumber());
 		}

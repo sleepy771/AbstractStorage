@@ -1,4 +1,4 @@
-package com_gmail_sleepy771.astorage;
+package com_gmail_sleepy771.astorage.utilities;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
+import com_gmail_sleepy771.astorage.Storable;
 
 public class ObjectData extends TreeMap<String, Object> {
 	/**
@@ -22,27 +24,24 @@ public class ObjectData extends TreeMap<String, Object> {
 	public static final HashSet<Class> writableClasses = new HashSet<Class>(
 			Arrays.<Class> asList(Boolean.class, Byte.class, Character.class,
 					Short.class, Integer.class, Long.class, Float.class,
-					Double.class, String.class));
+					Double.class, String.class, UDID.class));
 
-	private TreeMap<String, Long> referenceSerials; // Maybe String instead of
-													// Long for large objects
-													// with lots of
-													// serializables
-	private TreeSet<Long> serials;
-	private final long serialNumber;
+	private TreeMap<String, UDID> referenceSerials; 
+	private TreeSet<UDID> serials;
+	private final UDID uuid;
 	private TreeSet<String> storableReferenceNames = null;
 	
-	public ObjectData(String classType, long serial){
+	public ObjectData(String classType, UDID serial){
 		this.put(CLASS, classType);
-		this.serialNumber = serial;
+		this.uuid = serial;
 	}
 
-	public ObjectData(Storable obj, long serial) {
+	public ObjectData(Storable obj, UDID serial) {
 		this(obj.getClass().getName(), serial);
 	}
 
 	public ObjectData(Storable obj) {
-		this(obj, Serials.generateSerial());
+		this(obj, new UDID(obj));
 	}
 
 	public boolean isMultidimensional(String name) {
@@ -52,29 +51,29 @@ public class ObjectData extends TreeMap<String, Object> {
 		return obj.getClass().isArray() || Collection.class.isInstance(obj);
 	}
 
-	public TreeMap<String, Long> getReferenceSerials()
+	public TreeMap<String, UDID> getReferenceSerials()
 			throws NullPointerException {
 		if (this.referenceSerials == null)
 			throw new NullPointerException(
 					"Data doesn't contain any serial numbers of other references");
-		return new TreeMap<String, Long>(this.referenceSerials); // send only
+		return new TreeMap<String, UDID>(this.referenceSerials); // send only
 																	// cloned
 																	// object
 	}
 
-	public void putReferenceSerial(String varName, long sn) {
+	public void putReferenceSerial(String varName, UDID sn) {
 		if (this.referenceSerials == null)
-			this.referenceSerials = new TreeMap<String, Long>();
+			this.referenceSerials = new TreeMap<String, UDID>();
 		this.referenceSerials.put(varName, sn);
 	}
 	
-	public void putAllReferenceSerials(Map<String, Long> references){
+	public void putAllReferenceSerials(Map<String, UDID> references){
 		if (this.referenceSerials == null)
-			this.referenceSerials = new TreeMap<String, Long>();
+			this.referenceSerials = new TreeMap<String, UDID>();
 		this.referenceSerials.putAll(references);
 	}
 
-	public long removeReferenceSerial(String varName)
+	public UDID removeReferenceSerial(String varName)
 			throws NullPointerException {
 		if (this.referenceSerials == null)
 			throw new NullPointerException(
@@ -97,25 +96,25 @@ public class ObjectData extends TreeMap<String, Object> {
 		return get(CLASS).toString();
 	}
 
-	public long getSerialNumber() {
-		return this.serialNumber;
+	public UDID getSerialNumber() {
+		return this.uuid;
 	}
 
 	public Set<String> getStorableReferenceNameSet() {
 		return new TreeSet<String>(this.storableReferenceNames);
 	}
 
-	public HashMap<Storable, Long> pollAllStorableReferences() {
-		HashMap<Storable, Long> storables = new HashMap<Storable, Long>();
-		this.referenceSerials = new TreeMap<String, Long>();
+	public HashMap<Storable, UDID> pollAllStorableReferences() {
+		HashMap<Storable, UDID> storables = new HashMap<Storable, UDID>();
+		this.referenceSerials = new TreeMap<String, UDID>();
 		if(storableReferenceNames == null){
 			return storables;
 		}
 		for (String refName : this.storableReferenceNames) {
 			Storable storable = Storable.class.cast(remove(refName));
-			long serialNumber = Serials.generateSerial();
-			this.referenceSerials.put(refName, serialNumber);
-			storables.put(storable, serialNumber);
+			UDID udid = new UDID(storable);
+			this.referenceSerials.put(refName, udid);
+			storables.put(storable, udid);
 		}
 		this.storableReferenceNames = null;
 		return storables;
@@ -139,9 +138,9 @@ public class ObjectData extends TreeMap<String, Object> {
 		return false;
 	}
 
-	public boolean containsSerial(long serial) {
+	public boolean containsSerial(UDID serial) {
 		if (serials == null) {
-			this.serials = new TreeSet<Long>();
+			this.serials = new TreeSet<UDID>();
 			this.serials.addAll(this.referenceSerials.values());
 		}
 		return this.serials.contains(serial);
@@ -149,7 +148,7 @@ public class ObjectData extends TreeMap<String, Object> {
 
 	public boolean containsSerials(Collection<Long> serials) {
 		if (serials == null) {
-			this.serials = new TreeSet<Long>();
+			this.serials = new TreeSet<UDID>();
 			this.serials.addAll(this.referenceSerials.values());
 		}
 		return this.serials.containsAll(serials);

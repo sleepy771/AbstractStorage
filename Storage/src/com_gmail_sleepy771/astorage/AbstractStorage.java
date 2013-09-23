@@ -3,6 +3,9 @@ package com_gmail_sleepy771.astorage;
 import java.io.IOException;
 import java.util.Set;
 
+import com_gmail_sleepy771.astorage.utilities.ObjectData;
+import com_gmail_sleepy771.astorage.utilities.Query;
+
 public abstract class AbstractStorage {
 	
 	public abstract void store(ObjectData data) throws IOException;
@@ -11,8 +14,6 @@ public abstract class AbstractStorage {
 	
 	public abstract boolean contains(Query q) throws IOException;
 	public abstract long count(Query q) throws IOException;
-	
-	public abstract long getLastSerial() throws IOException;
 	
 	public abstract long size() throws IOException;
 	public abstract long capacity() throws IOException, UnsupportedOperationException;

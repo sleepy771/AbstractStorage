@@ -1,4 +1,4 @@
-package com_gmail_sleepy771.astorage;
+package com_gmail_sleepy771.astorage.handlers;
 
 import java.util.Collection;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -8,6 +8,13 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.logging.Logger;
+
+import com_gmail_sleepy771.astorage.Deserializer;
+import com_gmail_sleepy771.astorage.Storable;
+import com_gmail_sleepy771.astorage.exceptions.DeserializationException;
+import com_gmail_sleepy771.astorage.exceptions.SerializationException;
+import com_gmail_sleepy771.astorage.utilities.ObjectData;
+import com_gmail_sleepy771.astorage.utilities.UDID;
 
 public class DeserializationHandler extends Handler {
 	public static final TreeMap<String, Deserializer> DESERIALIZERS = new TreeMap<String, Deserializer>();
@@ -34,8 +41,8 @@ public class DeserializationHandler extends Handler {
 	private final ReentrantLock deserializerLock;
 	private final Condition deserializationFinished;
 
-	private TreeMap<Long, ObjectData> helperDataMap = null;
-	private TreeMap<Long, Object> helperObjectMap = null;
+	private TreeMap<UDID, ObjectData> helperDataMap = null;
+	private TreeMap<UDID, Object> helperObjectMap = null;
 
 	private Vector<Object> outputObjects = null;
 	private LinkedBlockingQueue<ObjectData> inputData = null;
@@ -55,7 +62,7 @@ public class DeserializationHandler extends Handler {
 		Vector<Object> output = null;
 		try {
 			outputObjects = new Vector<Object>(data.size());
-			helperDataMap = new TreeMap<Long, ObjectData>();
+			helperDataMap = new TreeMap<UDID, ObjectData>();
 			for (ObjectData hData : helperData) {
 				helperDataMap.put(hData.getSerialNumber(), hData);
 			}
@@ -118,12 +125,12 @@ public class DeserializationHandler extends Handler {
 						continue;
 					}
 
-					Vector<Long> references = new Vector<Long>(od
+					Vector<UDID> references = new Vector<UDID>(od
 							.getReferenceSerials().values());
 
 					if (!references.isEmpty()) {
 						boolean offered = false;
-						for (Long reference : references) {
+						for (UDID reference : references) {
 							if ((offered |= !helperObjectMap
 									.containsKey(reference))) {
 								inputData.offer(helperDataMap.get(reference));
@@ -158,7 +165,7 @@ public class DeserializationHandler extends Handler {
 					try {
 						TreeMap<String, Object> objectMapping = new TreeMap<String, Object>();
 						objectMapping.putAll(od);
-						for (Map.Entry<String, Long> reference : od
+						for (Map.Entry<String, UDID> reference : od
 								.getReferenceSerials().entrySet()) {
 							objectMapping.put(reference.getKey(),
 									helperObjectMap.get(reference.getValue()));

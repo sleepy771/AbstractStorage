@@ -7,6 +7,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Logger;
+
+import com_gmail_sleepy771.astorage.exceptions.IncompleteDataException;
+import com_gmail_sleepy771.astorage.exceptions.StorageException;
+import com_gmail_sleepy771.astorage.handlers.DeserializationHandler;
+import com_gmail_sleepy771.astorage.handlers.SerializationHandler;
+import com_gmail_sleepy771.astorage.handlers.StorageReaderSingle;
+import com_gmail_sleepy771.astorage.handlers.StorageWriter;
+import com_gmail_sleepy771.astorage.logging.ASDefaultLogger;
+import com_gmail_sleepy771.astorage.utilities.ObjectData;
+import com_gmail_sleepy771.astorage.utilities.Query;
 /**
  * StorageControl is central static class for simple access to storage interface objects.
  * Object is useful for simplifying code for IO operations, splitting Storage from code and option to change storage type (e.g. XML to SQL)
@@ -48,13 +58,6 @@ public class StorageControl {
 		}
 		setDefaultThreadCount();
 		writer.setInputQueue(serializer.getOutputDataQueue());
-		try{
-			Serials.setSerialNumber(storage.getLastSerial());
-		}catch(IOException ioe){
-			LOGGER.severe("IOException thrown!");
-			LOGGER.throwing(storage.getClass().getName(), "getLastSerial()", ioe);
-			throw new StorageException();
-		}
 	}
 	
 	/**

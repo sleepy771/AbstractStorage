@@ -1,7 +1,10 @@
-package com_gmail_sleepy771.astorage;
+package com_gmail_sleepy771.astorage.utilities;
 
+import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,7 +54,7 @@ public class Query {
 	}
 
 	public boolean addEqualityCriteria(String varName, Object obj) {
-		if (obj.getClass().isPrimitive() || obj.getClass().equals(String.class)) {
+		if (ObjectData.isWritableFormat(obj)) {
 			criteriaMap.put(varName, obj);
 			return true;
 		}
@@ -114,5 +117,15 @@ public class Query {
 			
 		}
 		return satisfies;
+	}
+	
+	public Set<ObjectData> getSubset(Collection<ObjectData> dataCollection){
+		TreeSet<ObjectData> subset = new TreeSet<ObjectData>();
+		for(ObjectData data : dataCollection){
+			if(satisfies(data)){
+				subset.add(data);
+			}
+		}
+		return subset;
 	}
 }

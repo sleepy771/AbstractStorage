@@ -1,4 +1,4 @@
-package com_gmail_sleepy771.astorage;
+package com_gmail_sleepy771.astorage.handlers;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -6,6 +6,11 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
+
+import com_gmail_sleepy771.astorage.AbstractStorage;
+import com_gmail_sleepy771.astorage.Storable;
+import com_gmail_sleepy771.astorage.exceptions.SerializationException;
+import com_gmail_sleepy771.astorage.utilities.ObjectData;
 
 public class StorageWriter extends Handler {
 
@@ -23,6 +28,11 @@ public class StorageWriter extends Handler {
 
 		public PoisonObject() {
 			super(new Storable() {
+
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = -7170913505930083420L;
 
 				@Override
 				public Map<String, Object> serialize()

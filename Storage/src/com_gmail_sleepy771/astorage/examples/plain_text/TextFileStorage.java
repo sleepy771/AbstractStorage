@@ -16,10 +16,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com_gmail_sleepy771.astorage.AbstractStorage;
-import com_gmail_sleepy771.astorage.ObjectData;
-import com_gmail_sleepy771.astorage.Query;
 import com_gmail_sleepy771.astorage.StorageControl;
-import com_gmail_sleepy771.astorage.StorageException;
+import com_gmail_sleepy771.astorage.exceptions.StorageException;
+import com_gmail_sleepy771.astorage.utilities.ObjectData;
+import com_gmail_sleepy771.astorage.utilities.Query;
+import com_gmail_sleepy771.astorage.utilities.UDID;
 
 public class TextFileStorage extends AbstractStorage {
 	private File textFile;
@@ -36,44 +37,20 @@ public class TextFileStorage extends AbstractStorage {
 
 	@Override
 	public void store(ObjectData data) throws IOException {
-		StringBuilder sb = new StringBuilder();
-		FileReader fr = new FileReader(textFile);
-		BufferedReader reader = new BufferedReader(fr);
-		String line = null;
-		long serial = 0;
-		while ((line = reader.readLine()) != null) {
-			if (line.contains("Serial")) {
-				Pattern p = Pattern.compile("\\d+");
-				Matcher m = p.matcher(line);
-				if (m.find())
-					serial = Long.parseLong(m.group());
-			} else {
-				sb.append(line + "\n");
-			}
-		}
-		reader.close();
-		serial = Math.max(data.getSerialNumber(), serial);
-		sb.insert(0, "Serial: " + serial + "\n");
-
-		sb.append("Data: " + data.getSerialNumber() + "{\n");
-		for (Map.Entry<String, Object> entry : data.entrySet()) {
-			sb.append(entry.getKey() + ": " + entry.getValue().toString()
-					+ "\n");
-		}
-		sb.append("References:");
-		for (Map.Entry<String, Long> entry : data.getReferenceSerials()
-				.entrySet()) {
-			sb.append(entry.getKey() + ": " + entry.getValue().toString()
-					+ "\n");
-		}
-		sb.append("}");
-
-		FileWriter fw = new FileWriter(textFile);
+		FileWriter fw = new FileWriter(textFile, true);
 		BufferedWriter bw = new BufferedWriter(fw);
 		PrintWriter writer = new PrintWriter(bw);
-
-		writer.println(sb.toString());
-
+		
+		writer.println("Data: " + data.getSerialNumber() + " {");
+		for (Map.Entry<String, Object> entry : data.entrySet()) {
+			writer.println(entry.getKey() + ": " + entry.getValue().toString());
+		}
+		writer.println("References:");
+		for (Map.Entry<String, UDID> entry : data.getReferenceSerials()
+				.entrySet()) {
+			writer.println(entry.getKey() + ": " + entry.getValue().toString());
+		}
+		writer.println("}");
 		writer.flush();
 		writer.close();
 	}
@@ -99,7 +76,7 @@ public class TextFileStorage extends AbstractStorage {
 			if (line.contains("Data")) {
 				sb = new LinkedList<String>();
 				sb.add(line);
-				isInteresting = false;
+				
 			}
 			if (sb != null) {
 				if (line.contains(first.getKey())
@@ -109,17 +86,17 @@ public class TextFileStorage extends AbstractStorage {
 				}
 				if (line.contains("}")) {
 					if (isInteresting) {
-						long serial = -1;
+						UDID serial = null;
 						String classType = null;
 						boolean references = false;
 						TreeMap<String, String> varmap = new TreeMap<String, String>();
-						TreeMap<String, Long> refMap = new TreeMap<String, Long>();
+						TreeMap<String, UDID> refMap = new TreeMap<String, UDID>();
 						for (String l : sb) {
 							if (l.contains("Data")) {
-								Pattern p = Pattern.compile("\\d+");
+								Pattern p = Pattern.compile("[0-9a-f]+");
 								Matcher m = p.matcher(line);
 								if (m.find())
-									serial = Long.parseLong(m.group());
+									serial = new UDID(m.group());
 							} else if (l.contains(ObjectData.CLASS)) {
 								classType = l.split(": ")[1];
 							} else if (l.contains("References")) {
@@ -130,7 +107,7 @@ public class TextFileStorage extends AbstractStorage {
 								varmap.put(kv[0], kv[1]);
 							} else {
 								String[] kv = l.split(": ");
-								refMap.put(kv[0], Long.valueOf(kv[1]));
+								refMap.put(kv[0], new UDID(kv[1]));
 							}
 						}
 						ObjectData od = new ObjectData(classType, serial);
@@ -139,6 +116,7 @@ public class TextFileStorage extends AbstractStorage {
 						set.add(od);
 					}
 					sb = null;
+					isInteresting = false;
 				}
 			}
 		}
@@ -178,26 +156,6 @@ public class TextFileStorage extends AbstractStorage {
 	@Override
 	public long capacity() throws IOException, UnsupportedOperationException {
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public long getLastSerial() throws IOException {
-		FileReader reader = new FileReader(textFile);
-		BufferedReader br = new BufferedReader(reader);
-		long lastSerial = 0L;
-		String line = null;
-		while ((line = br.readLine()) != null) {
-			if (line.contains("Serial")) {
-				Pattern p = Pattern.compile("\\d+");
-				Matcher m = p.matcher(line);
-				if (m.find()) {
-					lastSerial = Long.parseLong(m.group());
-				}
-				break;
-			}
-		}
-		br.close();
-		return lastSerial;
 	}
 
 	@Override

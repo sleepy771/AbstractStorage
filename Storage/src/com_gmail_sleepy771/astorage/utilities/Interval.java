@@ -1,4 +1,4 @@
-package com_gmail_sleepy771.astorage;
+package com_gmail_sleepy771.astorage.utilities;
 
 import java.util.Collection;
 import java.util.Comparator;
