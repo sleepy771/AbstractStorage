@@ -12,7 +12,7 @@ import java.util.TreeSet;
 
 import com_gmail_sleepy771.astorage.Storable;
 
-public class ObjectData extends TreeMap<String, Object> {
+public class ObjectData extends TreeMap<String, Object> implements Comparable<ObjectData>{
 	/**
 	 * 
 	 */
@@ -33,6 +33,10 @@ public class ObjectData extends TreeMap<String, Object> {
 	
 	public ObjectData(String classType, UDID serial){
 		this.put(CLASS, classType);
+		this.uuid = serial;
+	}
+	
+	public ObjectData(UDID serial){
 		this.uuid = serial;
 	}
 
@@ -59,6 +63,10 @@ public class ObjectData extends TreeMap<String, Object> {
 		return new TreeMap<String, UDID>(this.referenceSerials); // send only
 																	// cloned
 																	// object
+	}
+	
+	public void setClassType(String classType){
+		put(CLASS, classType);
 	}
 
 	public void putReferenceSerial(String varName, UDID sn) {
@@ -176,5 +184,10 @@ public class ObjectData extends TreeMap<String, Object> {
 				.entrySet()) {
 			put(entry.getKey(), entry.getValue());
 		}
+	}
+
+	@Override
+	public int compareTo(ObjectData o) {
+		return this.uuid.compareTo(o.uuid);
 	}
 }

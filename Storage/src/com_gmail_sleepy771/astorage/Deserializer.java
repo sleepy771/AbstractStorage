@@ -7,7 +7,7 @@ import com_gmail_sleepy771.astorage.utilities.ObjectData;
 
 public abstract class Deserializer implements Cloneable{
 
-	public abstract Object deserialize(Map<String, Object> od) throws DeserializationException;
+	public abstract Object deserialize(final Map<String, Object> od) throws DeserializationException;
 	
 	@Override
 	public abstract Object clone();

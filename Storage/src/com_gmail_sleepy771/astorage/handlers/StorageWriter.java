@@ -16,6 +16,10 @@ public class StorageWriter extends Handler {
 
 	private static final Logger LOGGER = Logger.getLogger(StorageWriter.class
 			.getName());
+	static{
+		LOGGER.setParent(Logger.getGlobal());
+		LOGGER.setUseParentHandlers(true);
+	}
 
 	private LinkedBlockingQueue<ObjectData> to;
 	private Vector<ObjectData> unstoredObjects;

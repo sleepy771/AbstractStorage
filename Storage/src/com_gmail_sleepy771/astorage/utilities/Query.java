@@ -1,6 +1,7 @@
 package com_gmail_sleepy771.astorage.utilities;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -120,7 +121,8 @@ public class Query {
 	}
 	
 	public Set<ObjectData> getSubset(Collection<ObjectData> dataCollection){
-		TreeSet<ObjectData> subset = new TreeSet<ObjectData>();
+		//Rework to use treeset
+		HashSet<ObjectData> subset = new HashSet<ObjectData>();
 		for(ObjectData data : dataCollection){
 			if(satisfies(data)){
 				subset.add(data);
