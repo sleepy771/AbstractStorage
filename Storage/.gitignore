@@ -1,2 +1,17 @@
 /bin
 /target
+*~
+.settings/
+target/
+.project
+.classpath
+pom.xml
+*.class
+# Packages
+*.jar
+*.war
+*.ear
+*.log
+.*
+
+
