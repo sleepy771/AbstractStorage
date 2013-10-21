@@ -74,8 +74,9 @@ public final class WritableReference<T> implements Writable<T> {
 	}
 	return isValidMap;
     }
-
-    private boolean isNull() {
+    
+    @Override
+    public boolean isNull() {
 	return obj == null;
     }
 

@@ -1,13 +1,13 @@
 package com.gmail.sleepy771.storage_interface.misc;
 
 public class Result<T> {
-    enum Type{
-	SUCCESS, NOT_COMPLETE, ERROR, WARNING
+    enum Flag{
+	SUCCESS, NOT_COMPLETE, COMPLETE, ERROR, WARNING
     }
     T data;
-    Type type;
+    Flag type;
     
-    public Result(Type type, T data) {
+    public Result(Flag type, T data) {
 	this.data = data;
 	this.type = type;
     }
@@ -16,7 +16,15 @@ public class Result<T> {
 	return data;
     }
     
-    public Type getResultType() {
+    public Flag getFlag() {
 	return this.type;
+    }
+    
+    public void setFlag(Flag f) {
+	
+    }
+    
+    public boolean isIncomplete() {
+	return this.type == Flag.NOT_COMPLETE;
     }
 }

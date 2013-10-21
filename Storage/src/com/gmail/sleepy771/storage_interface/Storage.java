@@ -6,12 +6,14 @@ import java.math.BigInteger;
 import java.rmi.NoSuchObjectException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
 import com.gmail.sleepy771.storage_interface.exceptions.PathException;
 import com.gmail.sleepy771.storage_interface.misc.Data;
 import com.gmail.sleepy771.storage_interface.misc.Result;
+import com.gmail.sleepy771.storage_interface.misc.Serial;
 import com.gmail.sleepy771.storage_interface.misc.StorageInterface;
 import com.gmail.sleepy771.storage_interface.misc.Writable;
 import com.gmail.sleepy771.storage_interface.navigation.DataKey;
@@ -46,7 +48,7 @@ public class Storage implements StorageInterface, SimpleReadAccesible, SimpleWri
     public StorageInterface getStorage(DataKey<String> storageKey) throws NoSuchObjectException {
 	return getStorage(storageKey.get());
     }
-
+    
     @Override
     public void setWorkingPath(Path<? extends Comparable<?>> path) {
 	// TODO Auto-generated method stub
@@ -89,48 +91,6 @@ public class Storage implements StorageInterface, SimpleReadAccesible, SimpleWri
     }
 
     @Override
-    public Result<Data> load(Path<? extends Comparable<?>> path)
-	    throws NoSuchElementException, IOException {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public Result<Data> loadAll(Collection<Path<? extends Comparable<?>>> paths)
-	    throws NoSuchElementException, IOException {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public Result<Void> save(Path<? extends Comparable<?>> path, Data data)
-	    throws IOException {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public Result<Void> save(Data data) throws IOException {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public Result<Void> saveAll(Map<Path<? extends Comparable<?>>, Data> dataMap)
-	    throws IOException {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public Result<Void> saveAll(
-	    Collection<Path<? extends Comparable<?>>> paths,
-	    Collection<Data> data) throws IOException {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
     public Result<Void> flush() {
 	// TODO Auto-generated method stub
 	return null;
@@ -138,42 +98,6 @@ public class Storage implements StorageInterface, SimpleReadAccesible, SimpleWri
 
     @Override
     public Result<Void> close() {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public Result<Void> set(Path<? extends Comparable<?>> path,
-	    Writable<?> writable) throws IOException {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public Result<Writable<?>> get(Path<? extends Comparable<?>> path)
-	    throws IOException, NoSuchElementException {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public Result<Void> remove(Path<? extends Comparable<?>> path)
-	    throws IOException, NoSuchElementException {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public Result<Void> removeAll(
-	    Collection<Path<? extends Comparable<?>>> paths)
-	    throws IOException, NoSuchElementException {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-
-    @Override
-    public Result<Long> size(Path<? extends Comparable<?>> path) {
 	// TODO Auto-generated method stub
 	return null;
     }
@@ -327,6 +251,95 @@ public class Storage implements StorageInterface, SimpleReadAccesible, SimpleWri
     @Override
     public Result<String> getString(Path<DataKey<?>> path)
 	    throws NoSuchFieldException, IOException {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public Result<Serial> save(Path<?> path, Data data) throws IOException {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public Result<Serial> save(Data data) throws IOException, PathException {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public List<Result<Serial>> saveAll(Map<Path<?>, Data> dataMap)
+	    throws IOException {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public List<Result<Serial>> saveAll(Collection<Data> data)
+	    throws IOException, PathException {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public Result<Void> add(Path<?> path, Writable<?> writable)
+	    throws IOException {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public List<Result<Void>> addAll(Path<?> path,
+	    Collection<Writable<?>> writable) throws IOException {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public Result<Writable<?>> set(Path<?> path, Writable<?> writable)
+	    throws IOException, PathException {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public List<Result<Data>> load(Path<?> path) throws NoSuchElementException,
+	    IOException {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public List<Result<Void>> removeAll(Collection<Path<?>> paths)
+	    throws IOException, NoSuchElementException {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public Map<Path<?>, List<Result<Data>>> loadAll(Collection<Path<?>> paths)
+	    throws NoSuchElementException, IOException {
+	//TODO split paths by storage from which they will get data
+	
+	return null;
+    }
+
+    @Override
+    public Result<Writable<?>> get(Path<?> path) throws IOException,
+	    NoSuchElementException {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public Result<Void> remove(Path<?> path) throws IOException,
+	    NoSuchElementException {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public Result<Long> size(Path<?> path) {
 	// TODO Auto-generated method stub
 	return null;
     }

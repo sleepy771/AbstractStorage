@@ -39,4 +39,9 @@ public class DataKey<T extends Comparable<T>> implements Writable<T>, Comparable
 	return reference.getInnerClass();
     }
 
+    @Override
+    public boolean isNull() {
+	return reference.isNull();
+    }
+
 }
