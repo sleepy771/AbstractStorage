@@ -7,7 +7,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import com.gmail.sleepy771.datastructures.DataInt;
+import com.gmail.sleepy771.datastructures.Data;
 
 public class SerializationHandler {
     private final Map<Class<?>, Serializer<?>> serializers;
@@ -20,17 +20,17 @@ public class SerializationHandler {
 	this.serializers = serializers;
     }
 
-    public DataInt serialize(final Object o) throws InterruptedException,
+    public Data serialize(final Object o) throws InterruptedException,
 	    ExecutionException {
 	if (o instanceof Serializable) {
-	    Callable<DataInt> scall = new Callable<DataInt>() {
+	    Callable<Data> scall = new Callable<Data>() {
 		@Override
-		public DataInt call() throws Exception {
+		public Data call() throws Exception {
 		    return Serializable.class.cast(o).serialize();
 		}
 
 	    };
-	    Future<DataInt> fdata = srv.submit(scall);
+	    Future<Data> fdata = srv.submit(scall);
 	    return fdata.get();
 	} else {
 

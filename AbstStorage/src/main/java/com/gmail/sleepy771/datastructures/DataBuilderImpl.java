@@ -27,14 +27,14 @@ public class DataBuilderImpl implements DataBuilder {
     private String objName;
     private Class<?> repClass;
     
-    public DataBuilderImpl(DataInt d) {
+    public DataBuilderImpl(Data d) {
 	this.objName = d.getName();
 	this.repClass = d.getRepresentedClass();
 	for(Entry<String, Object> entry : d.getRawEntrySet()) {
-	    if(!DataInt.class.isInstance(entry.getValue())) {
+	    if(!Data.class.isInstance(entry.getValue())) {
 		this.data.put(entry.getKey(), entry.getValue());
 	    } else {
-		DataInt di = DataInt.class.cast(entry.getValue());
+		Data di = Data.class.cast(entry.getValue());
 		DataBuilderImpl db = new DataBuilderImpl(di);
 		this.data.put(entry.getKey(), db);
 	    }
@@ -57,11 +57,11 @@ public class DataBuilderImpl implements DataBuilder {
     }
     
     @Override
-    public DataInt build() throws NotBuildableException {
+    public Data build() throws NotBuildableException {
 	if (objName == null || repClass == null || data.isEmpty()) {
 	    throw new NotBuildableException();
 	}
-	DataInt d = new DataInt() {
+	Data d = new Data() {
 	    private final Map<String, Object> data = DataBuilderImpl.this.data;
 	    private final String objName = DataBuilderImpl.this.objName;
 	    private final Class<?> repClass = DataBuilderImpl.this.repClass;
@@ -84,11 +84,11 @@ public class DataBuilderImpl implements DataBuilder {
 		    public Entry<String, Object> next() {
 			Entry<String, Object> obj = currentIterator.next();
 			
-			while(obj.getValue() instanceof DataInt) {
+			while(obj.getValue() instanceof Data) {
 			    if(currentIterator.hasNext()) {
 				iteratorStack.addFirst(currentIterator);
 			    }
-			    currentIterator = DataInt.class.cast(obj.getValue()).iterator();
+			    currentIterator = Data.class.cast(obj.getValue()).iterator();
 			    pathBuilder.append('.').append(obj.getKey());
 			    if(!currentIterator.hasNext()) {
 				currentIterator = iteratorStack.removeFirst();
@@ -137,15 +137,15 @@ public class DataBuilderImpl implements DataBuilder {
 	    @Override
 	    public Object get(Path p) {
 		Object obj = null;
-		DataInt di = this;
+		Data di = this;
 		Iterator<String> place = p.iterator();
 		while(place.hasNext()) {
 		    obj = di.get(place.next());
 		    if(place.hasNext()) {
-			if(!DataInt.class.isInstance(obj)) {
+			if(!Data.class.isInstance(obj)) {
 			    throw new InvalidPathException(p.toString(), obj.toString() + "is not data type");
 			} else {
-			    di = DataInt.class.cast(obj);
+			    di = Data.class.cast(obj);
 			}
 		    }
 		}
@@ -191,15 +191,15 @@ public class DataBuilderImpl implements DataBuilder {
     @Override
     public Object get(Path p) {
 	Object obj = null;
-	DataInt di = this;
+	Data di = this;
 	Iterator<String> place = p.iterator();
 	while(place.hasNext()) {
 	    obj = di.get(place.next());
 	    if(place.hasNext()) {
-		if(!DataInt.class.isInstance(obj)) {
+		if(!Data.class.isInstance(obj)) {
 		    throw new InvalidPathException(p.toString(), obj.toString() + "is not data type");
 		} else {
-		    di = DataInt.class.cast(obj);
+		    di = Data.class.cast(obj);
 		}
 	    }
 	}
@@ -228,7 +228,7 @@ public class DataBuilderImpl implements DataBuilder {
 
     @Override
     public DataBuilder put(String name, Object obj) {
-	if(WRITABLE_TYPES.contains(obj.getClass()) || DataInt.class.isInstance(obj)) {
+	if(WRITABLE_TYPES.contains(obj.getClass()) || Data.class.isInstance(obj)) {
 	    this.data.put(name, obj);
 	}
 	return this;
@@ -243,7 +243,7 @@ public class DataBuilderImpl implements DataBuilder {
     }
 
     @Override
-    public DataBuilder putAll(DataInt d) {
+    public DataBuilder putAll(Data d) {
 	putAll(new DataBuilderImpl(d));
 	return this;
     }

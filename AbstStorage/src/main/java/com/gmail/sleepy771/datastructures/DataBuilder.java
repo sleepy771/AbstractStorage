@@ -7,12 +7,12 @@ import java.util.Map.Entry;
 import com.gmail.sleepy771.storage.Buildable;
 import com.gmail.sleepy771.storage.Path;
 
-public interface DataBuilder extends Buildable<DataInt>, Iterable<Entry<String, Object>>, DataInt {
+public interface DataBuilder extends Buildable<Data>, Iterable<Entry<String, Object>>, Data {
     public DataBuilder put(String name, Object obj);
     
     public DataBuilder putAll(Map<String, Object> data);
     
-    public DataBuilder putAll(DataInt d);
+    public DataBuilder putAll(Data d);
     
     public DataBuilder putAll(DataBuilder d);
     

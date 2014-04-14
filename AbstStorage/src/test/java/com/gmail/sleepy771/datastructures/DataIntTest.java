@@ -13,7 +13,7 @@ import org.junit.Test;
 import com.gmail.sleepy771.storage.LocalPath;
 
 public class DataIntTest {
-    private DataInt d;
+    private Data d;
     private class Table1{
     }
     private class Row{

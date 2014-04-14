@@ -2,7 +2,7 @@ package com.gmail.sleepy771.storage;
 
 import java.util.List;
 
-import com.gmail.sleepy771.datastructures.DataInt;
+import com.gmail.sleepy771.datastructures.Data;
 
 public interface Storage {
 
@@ -16,15 +16,15 @@ public interface Storage {
 
     public List<String> listObjects(Path p);
 
-    public DataInt load(Path p);
+    public Data load(Path p);
 
-    public DataInt remove(Path p);
+    public Data remove(Path p);
 
     public Object set(Path p, Object replacement);
 
     public void start();
 
-    public void store(Path p, DataInt d);
+    public void store(Path p, Data d);
 
     public void validate(Path p);
 }
