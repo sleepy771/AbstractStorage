@@ -73,5 +73,10 @@ public class LocalPathTest {
 	assertEquals(s.next(), path[0]);
 	s.remove();
     }
+    
+    @Test
+    public void testToString() {
+	assertEquals("\\lp@table1.row_21.var_ref_image", lp.toString());
+    }
 
 }

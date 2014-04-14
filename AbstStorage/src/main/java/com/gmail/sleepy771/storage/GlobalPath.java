@@ -155,12 +155,11 @@ public class GlobalPath implements Path {
 
     @Override
     public String toString() {
-	StringBuilder sb = new StringBuilder("@");
-	sb.append(getStorageName()).append("://");
-	Iterator<String> pIter = path.iterator();
-	pIter.next(); // skip first
-	for (; pIter.hasNext();) {
-	    sb.append(pIter.next()).append("/");
+	StringBuilder sb = new StringBuilder("\\gp@");
+	for (Iterator<String> pIter = path.iterator(); pIter.hasNext();) {
+	    sb.append(pIter.next());
+	    if(pIter.hasNext())
+		sb.append(".");
 	}
 	return sb.toString();
     }

@@ -51,5 +51,10 @@ public class GlobalPathTest {
     public void testGetStorageName() {
 	assertEquals(gp.getStorageName(), storage);
     }
+    
+    @Test
+    public void testToString() {
+	assertEquals("\\gp@stor1.table1.ref_to_table2.lastRow.var_z", gp.toString());
+    }
 
 }
