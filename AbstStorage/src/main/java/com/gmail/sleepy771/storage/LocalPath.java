@@ -154,9 +154,9 @@ public class LocalPath implements Path {
 
     @Override
     public String toString() {
-	StringBuilder sb = new StringBuilder("/");
+	StringBuilder sb = new StringBuilder("\\lp/");
 	for (String p : path) {
-	    sb.append(p).append("/");
+	    sb.append(p).append(".");
 	}
 	return sb.toString();
     }
