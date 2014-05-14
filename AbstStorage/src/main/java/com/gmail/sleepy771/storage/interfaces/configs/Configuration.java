@@ -14,9 +14,9 @@ public interface Configuration {
     
     public void setSetting(String settingName, Object value);
     
-    public void setUp(File settingsFile);
+    public void read(File settingsFile);
     
     public void dispose();
     
-    
+    public void write(File settingsFile);
 }

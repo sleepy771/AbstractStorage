@@ -22,4 +22,8 @@ public class DeserializerFactory {
 	    throw new DeserializerNotFoundException();
 	return deserializers.get(objectClass).newInstance();
     }
+    
+    public void dispose() {
+	
+    }
 }

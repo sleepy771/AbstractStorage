@@ -33,4 +33,8 @@ public class StorageMapping {
     public Collection<String> listStorages() {
 	return new ArrayList<String>(stroages.keySet());
     }
+    
+    public void dispose() {
+	
+    }
 }

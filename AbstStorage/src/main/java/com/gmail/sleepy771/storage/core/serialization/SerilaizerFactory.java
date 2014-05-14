@@ -22,4 +22,8 @@ public class SerilaizerFactory {
 	    throw new SerializerNotFoundException();
 	return serializers.get(clazz).newInstance();
     }
+    
+    public void dispose() {
+	
+    }
 }
