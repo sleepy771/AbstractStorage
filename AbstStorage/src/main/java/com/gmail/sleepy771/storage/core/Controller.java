@@ -22,10 +22,7 @@ import com.gmail.sleepy771.storage.core.storages.StorageMapping;
 import com.gmail.sleepy771.storage.exceptions.NotBuildableException;
 import com.gmail.sleepy771.storage.exceptions.SerializerNotFoundException;
 import com.gmail.sleepy771.storage.exceptions.UnserializableObjectException;
-import com.gmail.sleepy771.storage.impl.consumers.CollectorImpl;
-import com.gmail.sleepy771.storage.impl.consumers.CollectorObjectBuilder;
 import com.gmail.sleepy771.storage.impl.consumers.StorageObservableImpl;
-import com.gmail.sleepy771.storage.interfaces.Buildable;
 import com.gmail.sleepy771.storage.interfaces.datastructures.Data;
 import com.gmail.sleepy771.storage.interfaces.datastructures.Duplet;
 import com.gmail.sleepy771.storage.interfaces.path.GlobalPath;
@@ -35,7 +32,6 @@ import com.gmail.sleepy771.storage.interfaces.serialization.Serializer;
 import com.gmail.sleepy771.storage.interfaces.simpleobservermodel.CallableObservable;
 import com.gmail.sleepy771.storage.interfaces.storages.Storage;
 import com.gmail.sleepy771.storage.interfaces.configs.Configuration;
-import com.gmail.sleepy771.storage.interfaces.consumers.Operation;
 import com.gmail.sleepy771.storage.interfaces.consumers.StorageListener;
 import com.gmail.sleepy771.storage.interfaces.consumers.StorageObservable;
 
