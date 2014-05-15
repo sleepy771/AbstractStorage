@@ -17,7 +17,7 @@ public class SerilaizerFactory {
 	serializers.remove(objectClass);
     }
     
-    public Serializer instantiateSerializerFor(Class<?> clazz) throws SerializerNotFoundException, InstantiationException, IllegalAccessException{
+    public Serializer instantiateSerializerFor(Class<?> clazz) throws SerializerNotFoundException, InstantiationException, IllegalAccessException {
 	if (!serializers.containsKey(clazz))
 	    throw new SerializerNotFoundException();
 	return serializers.get(clazz).newInstance();

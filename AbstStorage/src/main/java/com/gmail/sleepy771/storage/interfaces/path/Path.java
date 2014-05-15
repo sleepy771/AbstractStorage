@@ -12,9 +12,7 @@ public interface Path extends Iterable<String> {
 
     public String getNode();
     
-    public String getFirst();
-    
-    public String getLast();
+    public String getObjectName();
     
     public String element(); // Toto nebude jednoduche
 
