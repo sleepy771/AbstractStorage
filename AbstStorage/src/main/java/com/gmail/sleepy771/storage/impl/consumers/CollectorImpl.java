@@ -9,30 +9,43 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.gmail.sleepy771.storage.impl.DupletImpl;
+import com.gmail.sleepy771.storage.impl.AtomicImpl;
 import com.gmail.sleepy771.storage.interfaces.consumers.Collector;
 import com.gmail.sleepy771.storage.interfaces.consumers.Operation;
-import com.gmail.sleepy771.storage.interfaces.consumers.StorageListener;
 import com.gmail.sleepy771.storage.interfaces.consumers.StorageObservable;
-import com.gmail.sleepy771.storage.interfaces.datastructures.Duplet;
+import com.gmail.sleepy771.storage.interfaces.datastructures.Atomic;
 
 public class CollectorImpl<T> implements Collector<T>, Runnable {
 
-    private Operation<Duplet<String, T>> operation;
-    private LinkedList<Duplet<String, Future<T>>> awaitingFutureObjects = new LinkedList<Duplet<String, Future<T>>>();
+    private Operation<Atomic<String, T>> defaultOperation;
+    private Map<String, Operation<Atomic<String, T>>> futureOperations;
+    private LinkedList<Atomic<String, Future<T>>> awaitingFutureObjects = new LinkedList<Atomic<String, Future<T>>>();
     private final Lock collectorLock = new ReentrantLock();
     private final Condition isEmpty = collectorLock.newCondition();
-    private final Condition processed = collectorLock.newCondition();
+    private final Condition isProcessed = collectorLock.newCondition();
+    private final Condition isCollecting = collectorLock.newCondition();
     private Thread collectorThread = new Thread(this);
+    private Thread silencerThread = null;
+    private final Runnable silencer = new Runnable() {
+
+	    @Override
+	    public void run() {
+		silence(false);
+	    }
+
+	};
     private boolean running = false;
     private StorageObservable<Exception> exceptionObservable;
+    private boolean autosilence = false;
 
-    public CollectorImpl(Operation<Duplet<String, T>> o, StorageObservable<Exception> eo) {
-	this.operation = o;
+    public CollectorImpl(Operation<Atomic<String, T>> o,
+	    StorageObservable<Exception> eo) {
+	this.defaultOperation = o;
 	this.exceptionObservable = eo;
     }
 
@@ -40,7 +53,8 @@ public class CollectorImpl<T> implements Collector<T>, Runnable {
     public final void addFutureObject(String name, Future<T> f) {
 	collectorLock.lock();
 	try {
-	    this.awaitingFutureObjects.add(new DupletImpl<>(name, f));
+	    this.awaitingFutureObjects.add(new AtomicImpl<>(name, f));
+	    startCollecting();
 	    isEmpty.signal();
 	} finally {
 	    collectorLock.unlock();
@@ -52,8 +66,9 @@ public class CollectorImpl<T> implements Collector<T>, Runnable {
 	collectorLock.lock();
 	try {
 	    for (Entry<String, Future<T>> entry : c.entrySet()) {
-		this.awaitingFutureObjects.add(new DupletImpl<>(entry));
+		this.awaitingFutureObjects.add(new AtomicImpl<>(entry));
 	    }
+	    startCollecting();
 	    isEmpty.signal();
 	} finally {
 	    collectorLock.unlock();
@@ -64,9 +79,9 @@ public class CollectorImpl<T> implements Collector<T>, Runnable {
     public final void removeFutureObject(String name) {
 	collectorLock.lock();
 	try {
-	    for (Iterator<Duplet<String, Future<T>>> iter = this.awaitingFutureObjects
+	    for (Iterator<Atomic<String, Future<T>>> iter = this.awaitingFutureObjects
 		    .iterator(); iter.hasNext();) {
-		Duplet<String, Future<T>> dup = iter.next();
+		Atomic<String, Future<T>> dup = iter.next();
 		if (dup.getFirst().equals(name))
 		    iter.remove();
 	    }
@@ -90,58 +105,117 @@ public class CollectorImpl<T> implements Collector<T>, Runnable {
     public final void collect() {
 	collectorLock.lock();
 	try {
-	    if (!running) {
-		running = true;
-		this.collectorThread.start();
-	    }
+	    startCollecting();
 	} finally {
 	    collectorLock.unlock();
 	}
     }
-    
-    @Override
-    public final List<Duplet<String, Future<T>>> close() {
+
+    private void startCollecting() {
+	if (!running) {
+	    running = true;
+	    getCollectorThread().start();
+	}
+    }
+
+    private Thread getCollectorThread() {
+	if (collectorThread == null)
+	    collectorThread = new Thread(this);
+	return collectorThread;
+    }
+
+    public final List<Atomic<String, Future<T>>> silence(boolean forced) {
 	collectorLock.lock();
+	if (!running)
+	    return new ArrayList<>(1);
 	try {
-	    this.isEmpty.signal();
-	    this.processed.signal();
+	    if (!forced || isEmpty())
+		isCollecting.await();
+	    running = false;
+	    isEmpty.signal();
+	    isProcessed.signal();
+	    return new ArrayList<>(this.awaitingFutureObjects);
+	} catch (InterruptedException ie) {
+	    ie.printStackTrace(); // TODO log it
+	    collectorThread.interrupt();
 	    running = false;
 	    return new ArrayList<>(this.awaitingFutureObjects);
 	} finally {
-	    this.operation = null;
+	    this.awaitingFutureObjects.clear();
+	    this.futureOperations.clear();
+	    try {
+		this.collectorThread.join();
+	    } catch (InterruptedException ie) {
+		ie.printStackTrace(); // TODO Log
+		this.collectorThread.interrupt();
+	    }
+	    this.collectorThread = null;
+	    collectorLock.unlock();
+	}
+    }
+    
+    public void silenceAfterTask() {
+	collectorLock.lock();
+	try {
+	    runSilencerThread();
+	} finally {
+	    collectorLock.unlock();
+	}
+    }
+
+    @Override
+    public final List<Atomic<String, Future<T>>> close() {
+	collectorLock.lock();
+	try {
+	    running = false;
+	    this.isEmpty.signal();
+	    this.isProcessed.signal();
+	    return new ArrayList<>(this.awaitingFutureObjects);
+	} finally {
+	    this.defaultOperation = null;
 	    this.awaitingFutureObjects.clear();
 	    this.awaitingFutureObjects = null;
 	    this.exceptionObservable.dispose();
 	    this.exceptionObservable = null;
 	    try {
-		this.collectorThread.join();
-		this.collectorThread = null;
-		collectorLock.unlock();
+		if (collectorThread != null && collectorThread.isAlive())
+		    this.collectorThread.join();
+		if (silencerThread != null && silencerThread.isAlive())
+		    this.silencerThread.join();
 	    } catch (InterruptedException ie) {
 		ie.printStackTrace(); // TODO Log
 		this.collectorThread.interrupt();
-		this.collectorThread = null;
-		collectorLock.unlock();
+		this.silencerThread.interrupt();
 	    }
+	    this.collectorThread = null;
+	    this.silencerThread = null;
+	    collectorLock.unlock();
 	}
     }
 
     @Override
-    public final void setOnRecieveOperation(Operation<Duplet<String, T>> o) {
+    public final void setOnRecieveOperation(Operation<Atomic<String, T>> o) {
 	collectorLock.lock();
 	try {
-	    this.operation = o;
+	    this.defaultOperation = o;
 	} finally {
 	    collectorLock.unlock();
 	}
     }
 
-    public final Operation<Duplet<String, T>> getOnRecieveOperation() {
+    public final Operation<Atomic<String, T>> getOnRecieveOperation() {
 	collectorLock.lock();
 	try {
-	    return this.operation;
+	    return this.defaultOperation;
 	} finally {
 	    collectorLock.unlock();
+	}
+    }
+
+    private void runSilencerThread() {
+	if(silencerThread == null || !silencerThread.isAlive()) {
+	    silencerThread = new Thread(silencer);
+	    silencerThread.start();
 	}
     }
 
@@ -151,15 +225,32 @@ public class CollectorImpl<T> implements Collector<T>, Runnable {
 	try {
 	    while (running) {
 		if (this.awaitingFutureObjects.isEmpty()) {
-		    isEmpty.await();
+		    isCollecting.signal();
+		    if (autosilence) {
+			isEmpty.await(4, TimeUnit.SECONDS);
+			if (this.awaitingFutureObjects.isEmpty()) {
+			    runSilencerThread();
+			}
+		    } else {
+			isEmpty.await();
+		    }
 		}
-		processed.await();
-		List<Duplet<String, Future<T>>> toRemove = new LinkedList<>();
-		for (Duplet<String, Future<T>> dup : this.awaitingFutureObjects) {
+		isProcessed.await();
+		List<Atomic<String, Future<T>>> toRemove = new LinkedList<>();
+		for (Atomic<String, Future<T>> dup : this.awaitingFutureObjects) {
 		    try {
 			if (dup.getSecond().isDone()) {
-			    this.operation.excute(new DupletImpl<String, T>(dup
-				    .getFirst(), dup.getSecond().get()));
+			    if (futureOperations.containsKey(dup.getFirst())) {
+				futureOperations.get(dup.getFirst()).excute(
+					new AtomicImpl<>(dup.getFirst(), dup
+						.getSecond().get()));
+				futureOperations.remove(dup.getFirst());
+			    } else {
+				this.defaultOperation
+					.excute(new AtomicImpl<String, T>(dup
+						.getFirst(), dup.getSecond()
+						.get()));
+			    }
 			    toRemove.add(dup);
 			}
 		    } catch (ExecutionException e) {
@@ -176,37 +267,21 @@ public class CollectorImpl<T> implements Collector<T>, Runnable {
 	}
     }
 
-    public void addExceptionListener(StorageListener<Exception> listener) {
-	this.exceptionObservable.addListener(listener);
-    }
-
-    public void addAllExceptionListeners(
-	    Collection<StorageListener<Exception>> listeners) {
-	this.exceptionObservable.addAllListeners(listeners);
-    }
-
-    public void removeExceptionListener(StorageListener<Exception> listener) {
-	this.exceptionObservable.removeListener(listener);
-    }
-
-    public void removeAllExceptionListenres(
-	    Collection<StorageListener<Exception>> listeners) {
-	this.exceptionObservable.removeAllListenres(listeners);
-    }
-
-    public int countListeners() {
-	return this.exceptionObservable.countListeners();
-    }
-
     public StorageObservable<Exception> getObservale() {
-	return this.exceptionObservable;
+	collectorLock.lock();
+	try {
+	    return this.exceptionObservable;
+	} finally {
+	    collectorLock.unlock();
+	}
     }
 
     @Override
-    public final void onNotificationPerform(StorageObservable<Void> obs, Void object) {
+    public final void onNotificationPerform(StorageObservable<Void> obs,
+	    Void object) {
 	collectorLock.lock();
 	try {
-	    processed.signal();
+	    isProcessed.signal();
 	} finally {
 	    collectorLock.unlock();
 	}
@@ -239,6 +314,105 @@ public class CollectorImpl<T> implements Collector<T>, Runnable {
 	collectorLock.lock();
 	try {
 	    return this.exceptionObservable;
+	} finally {
+	    collectorLock.unlock();
+	}
+    }
+
+    @Override
+    public void addOperationForFuture(String name,
+	    Operation<Atomic<String, T>> o) {
+	collectorLock.lock();
+	try {
+	    this.futureOperations.put(name, o);
+	} finally {
+	    collectorLock.unlock();
+	}
+    }
+
+    @Override
+    public void removeOperationFromFuture(String name) {
+	collectorLock.lock();
+	try {
+	    this.futureOperations.remove(name);
+	} finally {
+	    collectorLock.unlock();
+	}
+    }
+
+    @Override
+    public void addFutureWithOperation(String name, Future<T> f,
+	    Operation<Atomic<String, T>> o) {
+	collectorLock.lock();
+	try {
+	    awaitingFutureObjects.add(new AtomicImpl<>(name, f));
+	    futureOperations.put(name, o);
+	    startCollecting();
+	    isEmpty.signal();
+	} finally {
+	    collectorLock.unlock();
+	}
+    }
+
+    @Override
+    public void addAllFutureObjectsWithOperations(
+	    Map<String, Atomic<Future<T>, Operation<Atomic<String, T>>>> map) {
+	collectorLock.lock();
+	try {
+	    for (Entry<String, Atomic<Future<T>, Operation<Atomic<String, T>>>> entry : map
+		    .entrySet()) {
+		awaitingFutureObjects.add(new AtomicImpl<>(entry.getKey(),
+			entry.getValue().getFirst()));
+		futureOperations.put(entry.getKey(), entry.getValue()
+			.getSecond());
+	    }
+	    startCollecting();
+	    isEmpty.signal();
+	} finally {
+	    collectorLock.unlock();
+	}
+    }
+
+    @Override
+    public void removeOperations(Collection<String> names) {
+	collectorLock.lock();
+	try {
+	    for (String futureName : names)
+		futureOperations.remove(futureName);
+	} finally {
+	    collectorLock.unlock();
+	}
+    }
+
+    public void setAutoSilence(boolean autosilence) {
+	collectorLock.lock();
+	try {
+	    this.autosilence = autosilence;
+	} finally {
+	    collectorLock.unlock();
+	}
+    }
+
+    public boolean getAutoSilence() {
+	collectorLock.lock();
+	try {
+	    return this.autosilence;
+	} finally {
+	    collectorLock.unlock();
+	}
+    }
+
+    @Override
+    public void addAllFutureObjectsWithOperation(Map<String, Future<T>> m,
+	    Operation<Atomic<String, T>> o) {
+	collectorLock.lock();
+	try {
+	    for(Entry<String, Future<T>> entry : m.entrySet()) {
+		awaitingFutureObjects.add(new AtomicImpl<>(entry));
+		futureOperations.put(entry.getKey(), o);
+	    }
+	    startCollecting();
+	    isEmpty.signal();
 	} finally {
 	    collectorLock.unlock();
 	}

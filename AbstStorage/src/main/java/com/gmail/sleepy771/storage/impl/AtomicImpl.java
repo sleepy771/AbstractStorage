@@ -3,19 +3,19 @@ package com.gmail.sleepy771.storage.impl;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.gmail.sleepy771.storage.interfaces.datastructures.Duplet;
+import com.gmail.sleepy771.storage.interfaces.datastructures.Atomic;
 
-public class DupletImpl<U, W> implements Duplet<U, W> {
+public class AtomicImpl<U, W> implements Atomic<U, W> {
     
     private final U u;
     private final W w;
     
-    public DupletImpl(U u, W w) {
+    public AtomicImpl(U u, W w) {
 	this.u = u;
 	this.w = w;
     }
     
-    public DupletImpl(Entry<U, W> entry) {
+    public AtomicImpl(Entry<U, W> entry) {
 	this(entry.getKey(), entry.getValue());
     }
     

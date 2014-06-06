@@ -1,6 +1,5 @@
 package com.gmail.sleepy771.storage.core;
 
-import java.io.File;
 import java.nio.file.InvalidPathException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.naming.NameNotFoundException;
 
+import com.gmail.sleepy771.storage.core.config.GlobalStorageSettings;
 import com.gmail.sleepy771.storage.core.serialization.DeserializerFactory;
 import com.gmail.sleepy771.storage.core.serialization.SerilaizerFactory;
 import com.gmail.sleepy771.storage.core.storages.StorageMapping;
@@ -24,7 +24,8 @@ import com.gmail.sleepy771.storage.exceptions.SerializerNotFoundException;
 import com.gmail.sleepy771.storage.exceptions.UnserializableObjectException;
 import com.gmail.sleepy771.storage.impl.consumers.StorageObservableImpl;
 import com.gmail.sleepy771.storage.interfaces.datastructures.Data;
-import com.gmail.sleepy771.storage.interfaces.datastructures.Duplet;
+import com.gmail.sleepy771.storage.interfaces.datastructures.Atomic;
+import com.gmail.sleepy771.storage.interfaces.datastructures.ObjectReference;
 import com.gmail.sleepy771.storage.interfaces.path.GlobalPath;
 import com.gmail.sleepy771.storage.interfaces.path.Path;
 import com.gmail.sleepy771.storage.interfaces.serialization.Deserializer;
@@ -32,6 +33,8 @@ import com.gmail.sleepy771.storage.interfaces.serialization.Serializer;
 import com.gmail.sleepy771.storage.interfaces.simpleobservermodel.CallableObservable;
 import com.gmail.sleepy771.storage.interfaces.storages.Storage;
 import com.gmail.sleepy771.storage.interfaces.configs.Configuration;
+import com.gmail.sleepy771.storage.interfaces.consumers.Collector;
+import com.gmail.sleepy771.storage.interfaces.consumers.Operation;
 import com.gmail.sleepy771.storage.interfaces.consumers.StorageListener;
 import com.gmail.sleepy771.storage.interfaces.consumers.StorageObservable;
 
@@ -46,14 +49,16 @@ public class Controller {
     private final SerilaizerFactory serializers;
     private final Configuration configuration;
     private final StorageObservable<Exception> exceptionHandler;
+    private final Collector<Object> collector;
 
     public Controller(StorageMapping mapping, SerilaizerFactory serializers,
-	    DeserializerFactory deserializers, Configuration config) {
+	    DeserializerFactory deserializers, Collector<Object> collector) {
 	this.mapping = mapping;
 	this.serializers = serializers;
 	this.deserializers = deserializers;
-	this.configuration = config;
+	this.configuration = GlobalStorageSettings.getInstance();
 	this.exceptionHandler = new StorageObservableImpl<Exception>();
+	this.collector = collector;
     }
 
     public void copy(final Path pOrig, final Path pNew) {
@@ -97,13 +102,13 @@ public class Controller {
 
     public void close() {
 	stop();
-	this.configuration.write(new File(configuration
-		.<String> getSettingTypeDef("defaultSettingsFile")));
+	this.configuration.save();
 	this.configuration.dispose();
 	this.deserializers.dispose();
 	this.serializers.dispose();
 	this.mapping.dispose();
 	this.exceptionHandler.dispose();
+	this.collector.close();
     }
 
     public Storage getStorageByName(final String name)
@@ -162,8 +167,6 @@ public class Controller {
 	return map;
     }
     
-    
-
     public <T> Future<T> loadFutureTypedef(final GlobalPath p) {
 	Callable<T> loadTask = new Callable<T>() {
 
@@ -180,8 +183,52 @@ public class Controller {
 	return this.srv.submit(loadTask);
     }
     
-    public Future<Object> loadFuture(GlobalPath p) {
-	return this.<Object>loadFutureTypedef(p);
+    public Future<Object> loadFuture(final GlobalPath p) {
+	Callable<Object> loadTask = new Callable<Object>() {
+
+	    @Override
+	    public Object call() throws Exception {
+		Storage storage = mapping.getStorage(p.getStorage());
+		Data data = storage.load(p.getLocal());
+		Class<?> clazz = data.getRepresentedClass();
+		Deserializer des = deserializers.getDeserializer(clazz);
+		return des.deserialize(data).asObject();
+	    }
+	    
+	};
+	return this.srv.submit(loadTask);
+    }
+    
+    public Map<String, Future<Object>> loadAllFuture(Collection<GlobalPath> paths) {
+	Map<String, Future<Object>> map = new HashMap<String, Future<Object>>();
+	for(GlobalPath path : paths) {
+	    map.put(path.getObjectName(), loadFuture(path));
+	}
+	return map;
+    }
+    
+    public void loadSilent(GlobalPath p, final ObjectReference<Object> ref) {
+	Operation<Atomic<String, Object>> operation = new Operation<Atomic<String, Object>>() {
+
+	    @Override
+	    public void excute(Atomic<String, Object> object) {
+		ref.set(object.getSecond());
+	    }
+	    
+	};
+	collector.addFutureWithOperation(p.getObjectName(), loadFuture(p), operation);
+    }
+    
+    public void loadAllSilent(Collection<GlobalPath> paths, final Map<String, Object> map) {
+	Operation<Atomic<String, Object>> operation = new Operation<Atomic<String, Object>>(){
+
+	    @Override
+	    public void excute(Atomic<String, Object> object) {
+		map.put(object.getFirst(), object.getSecond());
+	    }
+	    
+	};
+	collector.addAllFutureObjectsWithOperation(loadAllFuture(paths), operation);
     }
 
     public void move(final Path pOrig, final Path pNew) {
@@ -245,8 +292,8 @@ public class Controller {
 	this.srv.submit(silentSaveRunnable);
     }
     
-    public void saveAllSilent(List<Duplet<GlobalPath, Object>> list) {
-	for (Duplet<GlobalPath, Object> dup : list) {
+    public void saveAllSilent(List<Atomic<GlobalPath, Object>> list) {
+	for (Atomic<GlobalPath, Object> dup : list) {
 	    saveSilent(dup.getFirst(), dup.getSecond());
 	}
     }
