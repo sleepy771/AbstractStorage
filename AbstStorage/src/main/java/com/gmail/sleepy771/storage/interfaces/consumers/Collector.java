@@ -8,35 +8,39 @@ import java.util.concurrent.Future;
 import com.gmail.sleepy771.storage.interfaces.datastructures.Atomic;
 
 public interface Collector<T> extends StorageListener<Void> {
-    public void addFutureObject(String name, Future<T> f);
+	public void addFutureObject(String name, Future<T> f);
 
-    public void addAllFutureObjects(Map<String, Future<T>> c);
-    
-    public void addAllFutureObjectsWithOperation(Map<String, Future<T>> m, Operation<Atomic<String, T>> o);
+	public void addAllFutureObjects(Map<String, Future<T>> c);
 
-    public void addOperationForFuture(String name, Operation<Atomic<String, T>> o);
+	public void addAllFutureObjectsWithOperation(Map<String, Future<T>> m,
+			Operation<Atomic<String, T>> o);
 
-    public void removeOperationFromFuture(String name);
+	public void addOperationForFuture(String name,
+			Operation<Atomic<String, T>> o);
 
-    public void addFutureWithOperation(String name, Future<T> f, Operation<Atomic<String, T>> o);
-    
-    public void addAllFutureObjectsWithOperations(Map<String, Atomic<Future<T>, Operation<Atomic<String, T>>>> map);
+	public void removeOperationFromFuture(String name);
 
-    public void removeOperations(Collection<String> name);
+	public void addFutureWithOperation(String name, Future<T> f,
+			Operation<Atomic<String, T>> o);
 
-    public void removeFutureObject(String name);
+	public void addAllFutureObjectsWithOperations(
+			Map<String, Atomic<Future<T>, Operation<Atomic<String, T>>>> map);
 
-    public void removeAllFutureObjects(Collection<String> c);
+	public void removeOperations(Collection<String> name);
 
-    public List<Atomic<String, Future<T>>> close();
+	public void removeFutureObject(String name);
 
-    public void setExceptionHandler(StorageObservable<Exception> handler);
+	public void removeAllFutureObjects(Collection<String> c);
 
-    public StorageObservable<Exception> getExceptionHandler();
+	public List<Atomic<String, Future<T>>> close();
 
-    public void collect();
+	public void setExceptionHandler(StorageObservable<Exception> handler);
 
-    public boolean isEmpty();
+	public StorageObservable<Exception> getExceptionHandler();
 
-    public void setOnRecieveOperation(Operation<Atomic<String, T>> o);
+	public void collect();
+
+	public boolean isEmpty();
+
+	public void setOnRecieveOperation(Operation<Atomic<String, T>> o);
 }

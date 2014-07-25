@@ -6,7 +6,7 @@ import java.io.FileNotFoundException;
 import com.gmail.sleepy771.storage.core.config.SettingsSet;
 
 public interface SettingsReader {
-    public SettingsSet readSettings() throws FileNotFoundException;
+	public SettingsSet readSettings() throws FileNotFoundException;
 
-    public void setSettingsFile(File settingsFile);
+	public void setSettingsFile(File settingsFile);
 }

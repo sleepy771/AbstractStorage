@@ -13,44 +13,44 @@ import com.google.gson.Gson;
 
 public class JSONSettings implements SettingsReader, SettingsWriter {
 
-    private File file;
-    private final Gson gson;
+	private File file;
+	private final Gson gson;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * com.gmail.sleepy771.storage.interfaces.configs.SettingsReader#readSettings
-     * () json file: [ { "name": "settingName", "value": "value", }, { "name":
-     * "settingName2", "value": "value2", } ]
-     */
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.gmail.sleepy771.storage.interfaces.configs.SettingsReader#readSettings
+	 * () json file: [ { "name": "settingName", "value": "value", }, { "name":
+	 * "settingName2", "value": "value2", } ]
+	 */
 
-    public JSONSettings() {
-	this(new Gson(), new File("globalsettings.json"));
-    }
+	public JSONSettings() {
+		this(new Gson(), new File("globalsettings.json"));
+	}
 
-    public JSONSettings(final Gson gson, final File settingsFile) {
-	this.gson = gson;
-	file = settingsFile;
-    }
+	public JSONSettings(final Gson gson, final File settingsFile) {
+		this.gson = gson;
+		file = settingsFile;
+	}
 
-    @Override
-    public SettingsSet readSettings() throws FileNotFoundException {
-	BufferedReader br = new BufferedReader(new FileReader(file));
-	SettingsSet set = gson.fromJson(br, SettingsSet.class);
-	return set;
-    }
+	@Override
+	public SettingsSet readSettings() throws FileNotFoundException {
+		BufferedReader br = new BufferedReader(new FileReader(file));
+		SettingsSet set = gson.fromJson(br, SettingsSet.class);
+		return set;
+	}
 
-    @Override
-    public void setSettingsFile(final File settingsFile) {
-	file = settingsFile;
-    }
+	@Override
+	public void setSettingsFile(final File settingsFile) {
+		file = settingsFile;
+	}
 
-    @Override
-    public void writeSettings(final SettingsSet settings) throws IOException {
-	@SuppressWarnings("resource")
-	FileWriter fw = new FileWriter(file);
-	fw.write(gson.toJson(settings));
-    }
+	@Override
+	public void writeSettings(final SettingsSet settings) throws IOException {
+		FileWriter fw = new FileWriter(file);
+		fw.write(gson.toJson(settings));
+		fw.close();
+	}
 
 }

@@ -4,18 +4,18 @@ import java.util.List;
 
 public interface Path extends Iterable<String> {
 
-    public List<String> asList();
+	public List<String> asList();
 
-    public void dispose();
+	public void dispose();
 
-    public String get(int idx);
+	public String get(int idx);
 
-    public String getNode();
-    
-    public String getObjectName();
-    
-    public String element(); // Toto nebude jednoduche
+	public String getNode();
 
-    public Path getSubpath();
+	public String getObjectName();
+
+	public String element(); // Toto nebude jednoduche
+
+	public Path getSubpath();
 
 }
