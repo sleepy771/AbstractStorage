@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.gmail.sleepy771.storage.exceptions.HeapException;
 
-public class SynchronizedHeap<T extends Comparable<T>> implements Heap<T> {
+public class SynchronizedHeap<T extends ObtainableElement<T>> implements Heap<T> {
 	
 	private final Heap<T> innerHeap;
 	private final Lock heapLock;
@@ -50,7 +50,7 @@ public class SynchronizedHeap<T extends Comparable<T>> implements Heap<T> {
 	public T pull() throws HeapException {
 		heapLock.lock();
 		try {
-			while(innerHeap.isEmpty()) {
+			while(innerHeap.isEmpty() || !innerHeap.canObtainElement()) {
 				isEmpty.await();
 			}
 			return innerHeap.pull();
@@ -143,6 +143,16 @@ public class SynchronizedHeap<T extends Comparable<T>> implements Heap<T> {
 		heapLock.lock();
 		try {
 			return innerHeap.isEmpty();
+		} finally {
+			heapLock.unlock();
+		}
+	}
+
+	@Override
+	public boolean canObtainElement() {
+		heapLock.lock();
+		try {
+			return innerHeap.canObtainElement();
 		} finally {
 			heapLock.unlock();
 		}

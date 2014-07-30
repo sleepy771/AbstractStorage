@@ -5,7 +5,7 @@ import java.util.Comparator;
 
 import com.gmail.sleepy771.storage.exceptions.HeapException;
 
-public class DynamicalyAllocatedHeap<T extends Comparable<T>> implements Heap<T> {
+public class DynamicalyAllocatedHeap<T extends ObtainableElement<T>> implements Heap<T> {
 	
 	private final ArrayList<T> innerList;
 	private Comparator<T> comparator;
@@ -34,7 +34,7 @@ public class DynamicalyAllocatedHeap<T extends Comparable<T>> implements Heap<T>
 
 	@Override
 	public T pull() throws HeapException {
-		if (innerList.isEmpty())
+		if (innerList.isEmpty() || !innerList.get(0).canObtain())
 			throw new HeapException("Empty heap exception");
 		try {
 			return innerList.get(0);
@@ -114,9 +114,9 @@ public class DynamicalyAllocatedHeap<T extends Comparable<T>> implements Heap<T>
 	}
 	
 	private int compareOrNull(T o1, T o2) {
-		if (o1 == null) {
+		if (o1 == null || !o1.canObtain()) {
 			return -1;
-		} else if (o2 == null) {
+		} else if (o2 == null || !o2.canObtain()) {
 			return 1;
 		} else {
 			if (comparator != null) {
@@ -135,6 +135,11 @@ public class DynamicalyAllocatedHeap<T extends Comparable<T>> implements Heap<T>
 	
 	private int findMax(int k, int l) {
 		return compareOrNull(innerList.get(k), innerList.get(l)) < 0?l:k;
+	}
+
+	@Override
+	public boolean canObtainElement() {
+		return innerList.get(0).canObtain();
 	}
 
 }

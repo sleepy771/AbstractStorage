@@ -2,7 +2,9 @@ package com.gmail.sleepy771.storage.base;
 
 import java.util.concurrent.Callable;
 
-public interface Task extends Comparable<Task> {
+import com.gmail.sleepy771.storage.datastructures.ObtainableElement;
+
+public interface Task extends ObtainableElement<Task> {
 	/**
 	 * This methods returns priority of this Task instance. The higher the priority of execution is, the higher the number should be.
 	 * The value is dependent on task implementation.

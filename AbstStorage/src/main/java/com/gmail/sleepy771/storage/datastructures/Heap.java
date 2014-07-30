@@ -4,7 +4,7 @@ import java.util.Comparator;
 
 import com.gmail.sleepy771.storage.exceptions.HeapException;
 
-public interface Heap<T extends Comparable<T>> {
+public interface Heap<T extends ObtainableElement<T>> {
 	public void push(T element) throws HeapException;
 	
 	public T pull() throws HeapException;
@@ -26,4 +26,6 @@ public interface Heap<T extends Comparable<T>> {
 	public boolean isResizable();
 	
 	public boolean isEmpty();
+	
+	public boolean canObtainElement();
 }

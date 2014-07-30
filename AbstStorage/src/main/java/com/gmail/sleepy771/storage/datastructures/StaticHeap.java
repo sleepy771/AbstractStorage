@@ -4,7 +4,7 @@ import java.util.Comparator;
 
 import com.gmail.sleepy771.storage.exceptions.HeapException;
 
-public class StaticHeap<T extends Comparable<T>> implements Heap<T> {
+public class StaticHeap<T extends ObtainableElement<T>> implements Heap<T> {
 	
 	private final T[] elements;
 	private Comparator<T> comparator;
@@ -24,6 +24,7 @@ public class StaticHeap<T extends Comparable<T>> implements Heap<T> {
 		if (size == capacity)
 			throw new HeapException("Heap owerflowed");
 		elements[size] = element;
+		size++;
 		upHeapBuble();
 	}
 
@@ -41,11 +42,13 @@ public class StaticHeap<T extends Comparable<T>> implements Heap<T> {
 
 	@Override
 	public T pull() throws HeapException {
-		if (size == 0)
+		if (size == 0 || !elements[0].canObtain())
 			throw new HeapException("Empty heap exception");
 		try {
 			return elements[0];
 		} finally {
+			size--;
+			elements[0] = null;
 			downHeapBuble(0);
 		}
 	}
@@ -138,9 +141,9 @@ public class StaticHeap<T extends Comparable<T>> implements Heap<T> {
 	}
 	
 	private int compareOrNull(T o1, T o2) {
-		if (o1 == null) {
+		if (o1 == null || !o1.canObtain()) {
 			return -1;
-		} else if (o2 == null) {
+		} else if (o2 == null || !o2.canObtain()) {
 			return 1;
 		} else {
 			if (comparator == null) {
@@ -163,6 +166,11 @@ public class StaticHeap<T extends Comparable<T>> implements Heap<T> {
 		} else {
 			return idx << 1 + 1; 
 		}
+	}
+
+	@Override
+	public boolean canObtainElement() {
+		return elements[0].canObtain();
 	}
 
 }
