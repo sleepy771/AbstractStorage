@@ -17,8 +17,9 @@ public class TaskManagerImpl implements TaskManager, Runnable {
 	private final Map<Task, ResponseListener> responseMap;
 	private final Lock tmLock;
 	private final Condition isProcessed;
-	private final Condition poolFull;
+	private final Condition poolChanged;
 	private Thread taskManagerThread;
+	private Connector taskManagerConnector;
 	private ExecutorService threadPool;
 	private int maxTasksInPool;
 	private int tasksInPool;
@@ -30,9 +31,9 @@ public class TaskManagerImpl implements TaskManager, Runnable {
 		this.responseMap = new HashMap<>();
 		this.tmLock = new ReentrantLock();
 		this.isProcessed = this.tmLock.newCondition();
-		this.poolFull = tmLock.newCondition();
+		this.poolChanged = tmLock.newCondition();
 		threadPool = Executors.newCachedThreadPool();
-		maxTasksInPool = 16;
+		maxTasksInPool = 4;  // from config
 		tasksInPool = 0;
 	}
 
@@ -41,6 +42,7 @@ public class TaskManagerImpl implements TaskManager, Runnable {
 		tmLock.lock();
 		try {
 			updateSignal = true;
+			poolChanged.signal();
 		} finally {
 			tmLock.unlock();
 		}
@@ -75,7 +77,11 @@ public class TaskManagerImpl implements TaskManager, Runnable {
 		tmLock.lock();
 		try {
 			//TODO create Response and send it
-			poolFull.signal();
+			ResponseListener r = responseMap.remove(t);
+			if(r != null) {
+				//r.onResponse();
+			}
+			poolChanged.signal();
 			isProcessed.signal();
 			tasksInPool--;
 		} finally {
@@ -92,14 +98,37 @@ public class TaskManagerImpl implements TaskManager, Runnable {
 			tmLock.unlock();
 		}
 	}
+	
+	private void shuffleTheHeap() {
+		tmLock.lock();
+		try {
+			this.taskHeap.forceHeapRebuild();
+			updateSignal = false;
+		} finally {
+			tmLock.unlock();
+		}
+	}
+	
+	private boolean hasUpdated() {
+		tmLock.lock();
+		try {
+			return updateSignal;
+		} finally {
+			tmLock.unlock();
+		}
+	}
 
 	@Override
 	public void run() {
 		while(!shutdownSignal) {
 			try {
-				if (tasksInPool == maxTasksInPool)
-					poolFull.await();
-				sendToPool(taskHeap.pull());
+				if (tasksInPool == maxTasksInPool && !hasUpdated())
+					poolChanged.await();
+				if(hasUpdated()) {
+					shuffleTheHeap();
+				} else {
+					sendToPool(taskHeap.pull());
+				}
 			} catch (HeapException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -133,6 +162,16 @@ public class TaskManagerImpl implements TaskManager, Runnable {
 	@Override
 	public void close() {
 		// TODO create shutdown
+	}
+
+	@Override
+	public void setConnector(Connector connector) {
+		this.taskManagerConnector = connector;
+	}
+
+	@Override
+	public Connector getConnector() {
+		return this.taskManagerConnector;
 	}
 	
 }

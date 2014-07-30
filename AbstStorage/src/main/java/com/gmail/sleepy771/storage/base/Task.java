@@ -17,4 +17,6 @@ public interface Task extends ObtainableElement<Task> {
 	public long taskID();
 	
 	public boolean isExecutable();
+	
+	public Manager sendTo();
 }

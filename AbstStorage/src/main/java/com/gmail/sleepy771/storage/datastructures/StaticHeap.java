@@ -6,14 +6,13 @@ import com.gmail.sleepy771.storage.exceptions.HeapException;
 
 public class StaticHeap<T extends ObtainableElement<T>> implements Heap<T> {
 	
-	private final T[] elements;
+	private final Object[] elements;
 	private Comparator<T> comparator;
 	private int size;
 	private final int capacity;
 	
-	@SuppressWarnings("unchecked")
 	public StaticHeap(Comparator<T> comparator, int capacity) {
-		elements = (T[]) new Object[capacity];
+		elements = new Object[capacity];
 		this.capacity = capacity;
 		this.comparator = comparator;
 		size = 0;
@@ -27,12 +26,17 @@ public class StaticHeap<T extends ObtainableElement<T>> implements Heap<T> {
 		size++;
 		upHeapBuble();
 	}
+	
+	@SuppressWarnings({"unchecked" })
+	private T get(int index) {
+		return (T) elements[index];
+	}
 
 	private void upHeapBuble() {
 		int index = size();
 		while (index > 1) {
 			int parent = index / 2;
-			if (compareOrNull(elements[index], elements[parent]) <= 0) {
+			if (compareOrNull(get(index),get(parent)) <= 0) {
 				break;
 			}
 			swap(index, parent);
@@ -42,10 +46,10 @@ public class StaticHeap<T extends ObtainableElement<T>> implements Heap<T> {
 
 	@Override
 	public T pull() throws HeapException {
-		if (size == 0 || !elements[0].canObtain())
+		if (size == 0 || !get(0).canObtain())
 			throw new HeapException("Empty heap exception");
 		try {
-			return elements[0];
+			return get(0);
 		} finally {
 			size--;
 			elements[0] = null;
@@ -63,7 +67,7 @@ public class StaticHeap<T extends ObtainableElement<T>> implements Heap<T> {
 				child = findMax(child);
 			}
 			
-			if (compareOrNull(elements[index], elements[child + 1]) >= 0)
+			if (compareOrNull(get(index), get(child+1)) >= 0)
 				break;
 			swap(index, child);
 			index = child;
@@ -74,7 +78,7 @@ public class StaticHeap<T extends ObtainableElement<T>> implements Heap<T> {
 	public T pick() throws HeapException {
 		if (size == 0)
 			throw new HeapException("Empty heap exception");
-		return elements[0];
+		return get(0);
 	}
 
 	@Override
@@ -155,13 +159,13 @@ public class StaticHeap<T extends ObtainableElement<T>> implements Heap<T> {
 	}
 	
 	private void swap(int idx1, int idx2) {
-		T tmp = elements[idx1];
+		Object tmp = elements[idx1];
 		elements[idx1] = elements[idx2];
 		elements[idx2] = tmp;
 	}
 	
 	private int findMax(int idx) {
-		if (compareOrNull(elements[idx], elements[idx + 1]) > 0) {
+		if (compareOrNull(get(idx), get(idx+1)) > 0) {
 			return idx << 1;
 		} else {
 			return idx << 1 + 1; 
@@ -170,7 +174,7 @@ public class StaticHeap<T extends ObtainableElement<T>> implements Heap<T> {
 
 	@Override
 	public boolean canObtainElement() {
-		return elements[0].canObtain();
+		return get(0).canObtain();
 	}
 
 }
